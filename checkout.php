@@ -1,59 +1,34 @@
-<?php
-session_start();
-include('includes/db.php');
-include('includes/header.php');
+<?php include('includes/header.php'); ?>
 
-// Validasi jika keranjang kosong
-if (empty($_SESSION['cart'])) {
-    echo "Keranjang Anda kosong!";
-    exit;
-}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Checkout</h2>
 
-// Proses checkout
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $customer_id = 1; // Ganti dengan ID pelanggan yang login
-    $total = 0;
-    foreach ($_SESSION['cart'] as $item) {
-        $total += $item['total_price'];
-    }
-
-    // Insert ke tabel orders
-    $query = "INSERT INTO orders (customer_id, total, status) VALUES (:customer_id, :total, 'pending')";
-    $stmt = $pdo->prepare($query);
-    $stmt->bindParam(':customer_id', $customer_id);
-    $stmt->bindParam(':total', $total);
-    $stmt->execute();
-    
-    // Ambil ID order yang baru dibuat
-    $order_id = $pdo->lastInsertId();
-
-    // Insert ke tabel order_items
-    foreach ($_SESSION['cart'] as $product_id => $item) {
-        $query = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (:order_id, :product_id, :quantity, :price)";
-        $stmt = $pdo->prepare($query);
-        $stmt->bindParam(':order_id', $order_id);
-        $stmt->bindParam(':product_id', $product_id);
-        $stmt->bindParam(':quantity', $item['quantity']);
-        $stmt->bindParam(':price', $item['price']);
-        $stmt->execute();
-    }
-
-    // Kosongkan keranjang setelah checkout
-    unset($_SESSION['cart']);
-
-    // Redirect ke halaman konfirmasi pesanan
-    header("Location: order-summary.php?order_id=$order_id");
-}
-?>
-
-<div class="container mt-4">
-    <h2>Checkout</h2>
-    <form method="POST">
+    <form action="proses_checkout.php" method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nama Lengkap</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
         <div class="mb-3">
             <label for="address" class="form-label">Alamat Pengiriman</label>
-            <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+            <input type="text" class="form-control" id="address" name="address" required>
         </div>
-        <button type="submit" class="btn btn-primary">Selesaikan Pembayaran</button>
+        <div class="mb-3">
+            <label for="payment" class="form-label">Metode Pembayaran</label>
+            <select class="form-select" id="payment" name="payment" required>
+                <option value="cod">Cash on Delivery</option>
+                <option value="bank_transfer">Transfer Bank</option>
+                <option value="credit_card">Kartu Kredit</option>
+            </select>
+        </div>
+
+        <h3>Ringkasan Pesanan</h3>
+        <ul>
+            <li>Makanan Kucing - Rp 100,000</li>
+            <li>Mainan Anjing - Rp 100,000</li>
+        </ul>
+        <h4>Total: Rp 200,000</h4>
+
+        <button type="submit" class="btn btn-primary">Selesaikan Pembelian</button>
     </form>
 </div>
 
